@@ -62,3 +62,5 @@ function adminRoute(request, response, next) {
   //only admin users (handle in authorization)
   response.status(200).send('Welcome admin');
 }
+
+module.exports = router;
