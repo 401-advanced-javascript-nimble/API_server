@@ -1,5 +1,5 @@
 {
-  "name": "api_server",
+  "name": "api",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/401-advanced-javascript-nimble/API_server#readme",
   "dependencies": {
-    "dotenv": "^8.0.0"
+    "cors": "^2.8.5",
+    "dotenv": "^8.0.0",
+    "eslint": "^5.16.0",
+    "express": "^4.17.1",
+    "morgan": "^1.9.1"
   }
 }
