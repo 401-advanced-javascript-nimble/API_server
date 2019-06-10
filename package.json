@@ -17,10 +17,13 @@
   },
   "homepage": "https://github.com/401-advanced-javascript-nimble/API_server#readme",
   "dependencies": {
+    "bcrypt": "^3.0.6",
     "cors": "^2.8.5",
     "dotenv": "^8.0.0",
     "eslint": "^5.16.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.5.14",
     "morgan": "^1.9.1"
   }
 }
