@@ -7,7 +7,7 @@ const User = require('../models/users.js');
 const authorization = require('../authorization/authorization.js');
 
 router.post('/signup', signUp);
-router.get('/signin', authorization, signIn);
+router.post('/signin', authorization, signIn);
 router.get('/leaderboard', leaderboard);
 router.put('/socket', socket);
 router.get('/admin', authorization, adminRoute);
@@ -21,6 +21,7 @@ router.get('/admin', authorization, adminRoute);
 function signUp(request, response, next) {
 
   let user = new User(request.body);
+  
   user.save()
     .then( (user) => {
       if (user.role === 'superuser-admin') {
@@ -46,9 +47,19 @@ function signUp(request, response, next) {
  * @param {*} next Express next middleware function
  */
 function signIn(request, response, next) {
+  console.log('this is request.body', request.body);
   //TODO: look into keeping them signed in 
   //if authorized, keep them signed in
-  response.status(200).send('Welcome Back');
+  // User.find({username: request.body.username, password: request.body.password});
+  User.findOne({username: request.body.username})
+    .then(user => {
+      console.log('this is user:', user);
+      request.token = user.generateToken();
+      response.send(request.token);
+    });
+
+  console.log('this is request.token:', request.token);
+  // response.status(200).send('Welcome Back');
 }
 
 /**
