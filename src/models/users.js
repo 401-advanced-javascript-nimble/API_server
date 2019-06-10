@@ -12,35 +12,37 @@ const users = new mongoose.Schema({
   role: {type: String, default:'user', enum: ['superuser-admin', 'socket', 'user'], required:true},
 });
 
-class Users {
+const usedTokens = [];
 
-  constructor() {
-  }
+// class Users {
 
-  get(_id) {
-    let query = _id ? {_id} : {};
-    try { return schema.find(query, {__v: 0}); }
-    catch(e) { console.log(e) }
-  }
+//   constructor() {
+//   }
+
+//   get(_id) {
+//     let query = _id ? {_id} : {};
+//     try { return schema.find(query, {__v: 0}); }
+//     catch(e) { console.log(e) }
+//   }
   
-  post(record) {
-    let query = new schema(record);
-    try { return query.save(); }
-    catch(e) { console.log(e) }
-  }
+//   post(record) {
+//     let query = new schema(record);
+//     try { return query.save(); }
+//     catch(e) { console.log(e) }
+//   }
 
-  put(_id, record) {
-    let query = {...record};
-    try { return schema.findOneAndUpdate({_id}, query, {new: true, projection:{__v: 0}}); }
-    catch(e) { console.log(e) }
-  }
+//   put(_id, record) {
+//     let query = {...record};
+//     try { return schema.findOneAndUpdate({_id}, query, {new: true, projection:{__v: 0}}); }
+//     catch(e) { console.log(e) }
+//   }
 
-  delete(_id) {
-    let query = {_id};
-    return schema.remove(query);
-  }
+//   delete(_id) {
+//     let query = {_id};
+//     return schema.remove(query);
+//   }
 
-}
+// }
 
 users.pre('save', function(next) {
   bcrypt.hash(this.password, 10)
@@ -76,23 +78,24 @@ users.methods.comparePassword = function(password) {
     .then(valid => valid ? this : null);
 };
 
-users.methods.generateToken = function(type) {
+users.methods.generateToken = function(tokenType) {
   let token = {
     id: this._id,
     role: this.role,
-    type: type || 'user',
+    tokenType: tokenType || 'user',
   };
-
-  if (token.type !== 'key') {
-    return jwt.sign( token, process.env.SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_TIME || 900 } );
+  if (token.tokenType !== 'key') {
+    console.log('Generating token...');
+    return jwt.sign( token, process.env.SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_TIME } );
   }
   else {
-    return jwt.sign(token, process.env.SECRET)
+    console.log('Generating key...');
+    return jwt.sign(token, process.env.SECRET);
   }
 };
 
 users.methods.generateKey = function() {
   return this.generateToken('key');
-}
+};
 
 module.exports = mongoose.model('users', users);
