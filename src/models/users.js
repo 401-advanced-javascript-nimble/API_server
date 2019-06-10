@@ -12,8 +12,6 @@ const users = new mongoose.Schema({
   role: {type: String, default:'user', enum: ['superuser-admin', 'socket', 'user'], required:true},
 });
 
-const usedTokens = [];
-
 // class Users {
 
 //   constructor() {
@@ -61,15 +59,7 @@ users.statics.authenticateBasic = function(auth) {
 };
 
 users.statics.authenticateToken = function(token) {
-  if (usedTokens.includes(token)) {
-    throw new Error('token already used');
-  }
   const decryptedToken = jwt.verify(token, process.env.SECRET);
-  if (!!process.env.SINGLE_USE_TOKENS) {
-    if(decryptedToken.type !== 'key') {
-      usedTokens.push(token);
-    }
-  }
   return this.findOne({_id: decryptedToken.id});
 };
 

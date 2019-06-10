@@ -23,8 +23,6 @@ app.use(express.urlencoded({extended: true}));
 
 app.use(router);
 
-//TODO: Write and require in route not found?
-//TODO: Write error handler
 app.use(errorHandler);
 
 let running = false;

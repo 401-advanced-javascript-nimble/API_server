@@ -9,6 +9,7 @@ const authorization = require('../authorization/authorization.js');
 router.post('/signup', signUp);
 router.get('/signin', authorization, signIn);
 router.get('/leaderboard', leaderboard);
+router.put('/socket', socket);
 router.get('/admin', authorization, adminRoute);
 
 /**
@@ -18,9 +19,7 @@ router.get('/admin', authorization, adminRoute);
  * @param {*} next Express next middleware function
  */
 function signUp(request, response, next) {
-  //TODO: Database:
-  //pass new user info through the mongoose model and create a user
-  //sign them in?
+
   let user = new User(request.body);
   user.save()
     .then( (user) => {
@@ -64,6 +63,14 @@ function leaderboard(request, response, next) {
   response.status(200).send('Top Scores:');
 
 }
+//come back once socket server connection is setup//
+function socket(request, response, next){
+  // let gameResults = request.body;
+  // if(request.body){
+
+  // }
+  response.sendStatus(200);
+}
 
 /**
  * @function adminRoute
@@ -74,7 +81,13 @@ function leaderboard(request, response, next) {
 function adminRoute(request, response, next) {
   //TODO: authorization
   //only admin users (handle in authorization)
-  response.status(200).send('Welcome admin');
+  console.log('this is a request body', request);
+  if(request.user.role !== 'superuser-admin') {
+    response.status(403).send('Forbidden');
+  }
+  else {
+    response.status(200).send('Welcome admin');
+  }
 }
 
 module.exports = router;
