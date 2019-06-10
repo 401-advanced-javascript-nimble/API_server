@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 //still need to create authorization middleware
+const User = require('../models/users.js');
 const authorization = require('../authorization/authorization.js');
 
 router.post('/signup', signUp);
@@ -21,7 +22,16 @@ function signUp(request, response, next) {
   //TODO: Database:
   //pass new user info through the mongoose model and create a user
   //sign them in?
-  response.status(200).send('Thank you for signing up!');
+  let user = new User(request.body);
+  user.save()
+    .then( (user) => {
+      request.token = user.generateToken();
+      request.user = user;
+      response.set('token', request.token);
+      response.cookie('auth', request.token);
+      response.send(request.token);
+    }).catch(next);
+  // response.status(200).send('Thank you for signing up!');
 
 }
 
