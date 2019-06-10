@@ -3,7 +3,6 @@
 const express = require('express');
 const router = express.Router();
 
-//still need to create authorization middleware
 const User = require('../models/users.js');
 const authorization = require('../authorization/authorization.js');
 
@@ -25,7 +24,12 @@ function signUp(request, response, next) {
   let user = new User(request.body);
   user.save()
     .then( (user) => {
-      request.token = user.generateToken();
+      if (user.role === 'superuser-admin') {
+        request.token = user.generateKey();
+      }
+      else {
+        request.token = user.generateToken();
+      }
       request.user = user;
       response.set('token', request.token);
       response.cookie('auth', request.token);
