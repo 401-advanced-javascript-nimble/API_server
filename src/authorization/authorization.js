@@ -1,6 +1,6 @@
 'use strict';
 
-const User = require('../models/schemas/users-schema.js');
+const User = require('../models/users.js');
 
 module.exports = (req, res, next) => {
   

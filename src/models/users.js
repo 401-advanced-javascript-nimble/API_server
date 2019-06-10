@@ -1,6 +1,16 @@
 'use strict';
 
-const schema = require('./schemas/users-schema.js.js.js');
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const users = new mongoose.Schema({
+  username: {type:String, required:true, unique:true},
+  password: {type:String, required:true},
+  email: {type: String, required:true},
+  stats: {type: Object},
+  role: {type: String, default:'user', enum: ['superuser-admin', 'socket', 'user'], required:true},
+});
 
 class Users {
 
@@ -32,63 +42,57 @@ class Users {
 
 }
 
-module.exports = Users;
+users.pre('save', function(next) {
+  bcrypt.hash(this.password, 10)
+    .then(hashedPassword => {
+      this.password = hashedPassword;
+      next();
+    })
+    .catch(console.error);
+});
 
+users.statics.authenticateBasic = function(auth) {
+  let query = {username:auth.username};
+  return this.findOne(query)
+    .then( user => user && user.comparePassword(auth.password) )
+    .catch(error => {throw error;});
+};
 
+users.statics.authenticateToken = function(token) {
+  if (usedTokens.includes(token)) {
+    throw new Error('token already used');
+  }
+  const decryptedToken = jwt.verify(token, process.env.SECRET);
+  if (!!process.env.SINGLE_USE_TOKENS) {
+    if(decryptedToken.type !== 'key') {
+      usedTokens.push(token);
+    }
+  }
+  return this.findOne({_id: decryptedToken.id});
+};
 
+users.methods.comparePassword = function(password) {
+  return bcrypt.compare( password, this.password )
+    .then(valid => valid ? this : null);
+};
 
-// const bcrypt = require('bcrypt');
-// const jwt = require('jsonwebtoken');
+users.methods.generateToken = function(type) {
+  let token = {
+    id: this._id,
+    role: this.role,
+    type: type || 'user',
+  };
 
-// users.pre('save', function(next) {
-//   bcrypt.hash(this.password, 10)
-//     .then(hashedPassword => {
-//       this.password = hashedPassword;
-//       next();
-//     })
-//     .catch(console.error);
-// });
+  if (token.type !== 'key') {
+    return jwt.sign( token, process.env.SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_TIME || 900 } );
+  }
+  else {
+    return jwt.sign(token, process.env.SECRET)
+  }
+};
 
-// users.statics.authenticateBasic = function(auth) {
-//   let query = {username:auth.username};
-//   return this.findOne(query)
-//     .then( user => user && user.comparePassword(auth.password) )
-//     .catch(error => {throw error;});
-// };
+users.methods.generateKey = function() {
+  return this.generateToken('key');
+}
 
-// users.statics.authenticateToken = function(token) {
-//   if (usedTokens.includes(token)) {
-//     throw new Error('token already used');
-//   }
-//   const decryptedToken = jwt.verify(token, process.env.SECRET);
-//   if (!!process.env.SINGLE_USE_TOKENS) {
-//     if(decryptedToken.type !== 'key') {
-//       usedTokens.push(token);
-//     }
-//   }
-//   return this.findOne({_id: decryptedToken.id});
-// };
-
-// users.methods.comparePassword = function(password) {
-//   return bcrypt.compare( password, this.password )
-//     .then(valid => valid ? this : null);
-// };
-
-// users.methods.generateToken = function(type) {
-//   let token = {
-//     id: this._id,
-//     role: this.role,
-//     type: type || 'user',
-//   };
-
-//   if (token.type !== 'key') {
-//     return jwt.sign( token, process.env.SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_TIME || 900 } );
-//   }
-//   else {
-//     return jwt.sign(token, process.env.SECRET)
-//   }
-// };
-
-// users.methods.generateKey = function() {
-//   return this.generateToken('key');
-// }
+module.exports = mongoose.model('users', users);
