@@ -11,6 +11,7 @@ router.post('/signin', authorization, signIn);
 router.get('/leaderboard', leaderboard);
 router.put('/socket', socket);
 router.get('/admin', authorization, adminRoute);
+router.post('/validate', authorization, validate);
 
 /**
  * @function signUp
@@ -48,8 +49,6 @@ function signUp(request, response, next) {
  */
 function signIn(request, response, next) {
   console.log('this is request.body', request.body);
-  //TODO: look into keeping them signed in 
-  //if authorized, keep them signed in
   // User.find({username: request.body.username, password: request.body.password});
   User.findOne({username: request.body.username})
     .then(user => {
@@ -90,8 +89,7 @@ function socket(request, response, next){
  * @param {*} next Express next middleware function
  */
 function adminRoute(request, response, next) {
-  //TODO: authorization
-  //only admin users (handle in authorization)
+
   console.log('this is a request body', request);
   if(request.user.role !== 'superuser-admin') {
     response.status(403).send('Forbidden');
@@ -99,6 +97,10 @@ function adminRoute(request, response, next) {
   else {
     response.status(200).send('Welcome admin');
   }
+}
+
+function validate(request, response, next) {
+  response.sendStatus(204);
 }
 
 module.exports = router;
