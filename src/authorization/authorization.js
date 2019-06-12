@@ -2,6 +2,8 @@
 
 const User = require('../models/users.js');
 
+//========================================
+
 module.exports = (req, res, next) => {
   
   try {
@@ -19,6 +21,11 @@ module.exports = (req, res, next) => {
   catch(e) {
     res.status(403).send('Forbidden');
   }
+
+  //========================================
+  // Auth Functions
+  //========================================
+
   
   function _authBasic(str) {
     let base64Buffer = Buffer.from(str, 'base64');

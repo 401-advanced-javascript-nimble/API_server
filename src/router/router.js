@@ -6,12 +6,22 @@ const router = express.Router();
 const User = require('../models/users.js');
 const authorization = require('../authorization/authorization.js');
 
+//========================================
+// Routes
+//========================================
+
+
 router.post('/signup', signUp);
 router.post('/signin', authorization, signIn);
 router.get('/leaderboard', leaderboard);
 router.patch('/updateStats', updateStats);
 router.get('/admin', authorization, adminRoute);
 router.post('/validate', authorization, validate);
+
+//========================================
+// Callback Functions
+//========================================
+
 
 /**
  * @function signUp
@@ -75,16 +85,15 @@ function leaderboard(request, response, next) {
 }
 
 function updateStats(request, response, next){
-  console.log('in update stats');
   let [authType, token] = request.headers.authorization.split(/\s+/);
 
   User.authenticateToken(token)
     .then( user => {
       console.log(user);
       const id = user._id;
-      let stats = user.stats;
-      stats ++;
-      User.findByIdAndUpdate(id, {stats: stats}, {new:true, useFindAndModify:false}).then(result => {
+      let wins = user.wins;
+      wins ++;
+      User.findByIdAndUpdate(id, {wins: wins}, {new:true, useFindAndModify:false}).then(result => {
         console.log(result);
       });
     });
@@ -111,5 +120,7 @@ function adminRoute(request, response, next) {
 function validate(request, response, next) {
   response.sendStatus(204);
 }
+
+//========================================
 
 module.exports = router;
