@@ -86,7 +86,6 @@ function leaderboard(request, response, next) {
     .select({_id: 0, username: 1, wins: 1})
     .exec( (err, data) => {
       response.status(200).send({TopScores: data});
-      console.log(data);
     });
 
 
