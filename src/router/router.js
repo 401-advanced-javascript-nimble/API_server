@@ -9,7 +9,7 @@ const authorization = require('../authorization/authorization.js');
 router.post('/signup', signUp);
 router.post('/signin', authorization, signIn);
 router.get('/leaderboard', leaderboard);
-router.put('/socket', socket);
+router.patch('/updateStats', updateStats);
 router.get('/admin', authorization, adminRoute);
 router.post('/validate', authorization, validate);
 
@@ -73,12 +73,21 @@ function leaderboard(request, response, next) {
   response.status(200).send('Top Scores:');
 
 }
-//come back once socket server connection is setup//
-function socket(request, response, next){
-  // let gameResults = request.body;
-  // if(request.body){
 
-  // }
+function updateStats(request, response, next){
+  console.log('in update stats');
+  let [authType, token] = request.headers.authorization.split(/\s+/);
+
+  User.authenticateToken(token)
+    .then( user => {
+      console.log(user);
+      const id = user._id;
+      let stats = user.stats;
+      stats ++;
+      User.findByIdAndUpdate(id, {stats: stats}, {new:true, useFindAndModify:false}).then(result => {
+        console.log(result);
+      });
+    });
   response.sendStatus(200);
 }
 
