@@ -4,43 +4,22 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+//========================================
+// Schema
+//========================================
+
 const users = new mongoose.Schema({
   username: {type:String, required:true, unique:true},
   password: {type:String, required:true},
   email: {type: String, required:true},
-  stats: {type: Object},
+  wins: {type: Object, default: 0},
   role: {type: String, default:'user', enum: ['superuser-admin', 'socket', 'user'], required:true},
 });
 
-// class Users {
+//========================================
+// Hooks
+//========================================
 
-//   constructor() {
-//   }
-
-//   get(_id) {
-//     let query = _id ? {_id} : {};
-//     try { return schema.find(query, {__v: 0}); }
-//     catch(e) { console.log(e) }
-//   }
-  
-//   post(record) {
-//     let query = new schema(record);
-//     try { return query.save(); }
-//     catch(e) { console.log(e) }
-//   }
-
-//   put(_id, record) {
-//     let query = {...record};
-//     try { return schema.findOneAndUpdate({_id}, query, {new: true, projection:{__v: 0}}); }
-//     catch(e) { console.log(e) }
-//   }
-
-//   delete(_id) {
-//     let query = {_id};
-//     return schema.remove(query);
-//   }
-
-// }
 
 users.pre('save', function(next) {
   bcrypt.hash(this.password, 10)
@@ -50,6 +29,10 @@ users.pre('save', function(next) {
     })
     .catch(console.error);
 });
+
+//========================================
+// Statics
+//========================================
 
 users.statics.authenticateBasic = function(auth) {
   let query = {username:auth.username};
@@ -62,6 +45,11 @@ users.statics.authenticateToken = function(token) {
   const decryptedToken = jwt.verify(token, process.env.SECRET);
   return this.findOne({_id: decryptedToken.id});
 };
+
+//========================================
+// Methods
+//========================================
+
 
 users.methods.comparePassword = function(password) {
   return bcrypt.compare( password, this.password )
@@ -87,5 +75,7 @@ users.methods.generateToken = function(tokenType) {
 users.methods.generateKey = function() {
   return this.generateToken('key');
 };
+
+//========================================
 
 module.exports = mongoose.model('users', users);

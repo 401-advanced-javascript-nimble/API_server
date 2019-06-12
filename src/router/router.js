@@ -6,12 +6,22 @@ const router = express.Router();
 const User = require('../models/users.js');
 const authorization = require('../authorization/authorization.js');
 
+//========================================
+// Routes
+//========================================
+
+
 router.post('/signup', signUp);
 router.post('/signin', authorization, signIn);
 router.get('/leaderboard', leaderboard);
-router.put('/socket', socket);
+router.patch('/updateStats', updateStats);
 router.get('/admin', authorization, adminRoute);
 router.post('/validate', authorization, validate);
+
+//========================================
+// Callback Functions
+//========================================
+
 
 /**
  * @function signUp
@@ -73,12 +83,20 @@ function leaderboard(request, response, next) {
   response.status(200).send('Top Scores:');
 
 }
-//come back once socket server connection is setup//
-function socket(request, response, next){
-  // let gameResults = request.body;
-  // if(request.body){
 
-  // }
+function updateStats(request, response, next){
+  let [authType, token] = request.headers.authorization.split(/\s+/);
+
+  User.authenticateToken(token)
+    .then( user => {
+      console.log(user);
+      const id = user._id;
+      let wins = user.wins;
+      wins ++;
+      User.findByIdAndUpdate(id, {wins: wins}, {new:true, useFindAndModify:false}).then(result => {
+        console.log(result);
+      });
+    });
   response.sendStatus(200);
 }
 
@@ -102,5 +120,7 @@ function adminRoute(request, response, next) {
 function validate(request, response, next) {
   response.sendStatus(204);
 }
+
+//========================================
 
 module.exports = router;
