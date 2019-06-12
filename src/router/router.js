@@ -79,8 +79,16 @@ function signIn(request, response, next) {
  */
 function leaderboard(request, response, next) {
   //TODO: Database
-  //get high scores from database
-  response.status(200).send('Top Scores:');
+
+  User.find({})
+    .limit(5)
+    .sort({wins: -1})
+    .select({_id: 0, username: 1, wins: 1})
+    .exec( (err, data) => {
+      response.status(200).send({TopScores: data});
+      console.log(data);
+    });
+
 
 }
 
