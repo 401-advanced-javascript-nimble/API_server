@@ -32,7 +32,6 @@ router.post('/validate', authorization, validate);
 function signUp(request, response, next) {
 
   let user = new User(request.body);
-  
   user.save()
     .then( (user) => {
       if (user.role === 'superuser-admin') {
@@ -58,17 +57,11 @@ function signUp(request, response, next) {
  * @param {*} next Express next middleware function
  */
 function signIn(request, response, next) {
-  console.log('this is request.body', request.body);
-  // User.find({username: request.body.username, password: request.body.password});
   User.findOne({username: request.body.username})
     .then(user => {
-      console.log('this is user:', user);
       request.token = user.generateToken();
       response.send(request.token);
     });
-
-  console.log('this is request.token:', request.token);
-  // response.status(200).send('Welcome Back');
 }
 
 /**
@@ -93,19 +86,28 @@ function leaderboard(request, response, next) {
 
 function updateStats(request, response, next){
   let [authType, token] = request.headers.authorization.split(/\s+/);
-
+  let id;
+  let wins;
   User.authenticateToken(token)
-    .then( user => {
-      console.log(user);
-      const id = user._id;
-      let wins = user.wins;
+    .then( foundUser => {
+      id = foundUser._id;
+      wins = foundUser.wins;
       wins ++;
-      User.findByIdAndUpdate(id, {wins: wins}, {new:true, useFindAndModify:false}).then(result => {
-        console.log(result);
-      });
+    })
+    .then(() => {
+      User.findByIdAndUpdate({id},
+        {wins: wins},
+        {new:true, useFindAndModify:false}
+      );
+    })
+    .then(result => {
+      response.status(200).send(result);
+    })
+    .catch(error => {
+      console.log({error});
     });
-  response.sendStatus(200);
 }
+
 
 /**
  * @function adminRoute
@@ -114,8 +116,6 @@ function updateStats(request, response, next){
  * @param {*} next Express next middleware function
  */
 function adminRoute(request, response, next) {
-
-  console.log('this is a request body', request);
   if(request.user.role !== 'superuser-admin') {
     response.status(403).send('Forbidden');
   }

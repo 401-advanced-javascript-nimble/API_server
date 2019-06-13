@@ -30,6 +30,7 @@ app.use(errorHandler);
 let running = false;
 
 module.exports = {
+  running: running, // <-- for testing
   server: app,
   start: port => {
     if(!running) {
