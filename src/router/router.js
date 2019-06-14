@@ -6,10 +6,22 @@ const router = express.Router();
 const User = require('../models/users.js');
 const authorization = require('../authorization/authorization.js');
 
+//========================================
+// Routes
+//========================================
+
+
 router.post('/signup', signUp);
-router.get('/signin', authorization, signIn);
+router.post('/signin', authorization, signIn);
 router.get('/leaderboard', leaderboard);
+router.patch('/updateStats', updateStats);
 router.get('/admin', authorization, adminRoute);
+router.post('/validate', authorization, validate);
+
+//========================================
+// Callback Functions
+//========================================
+
 
 /**
  * @function signUp
@@ -18,9 +30,7 @@ router.get('/admin', authorization, adminRoute);
  * @param {*} next Express next middleware function
  */
 function signUp(request, response, next) {
-  //TODO: Database:
-  //pass new user info through the mongoose model and create a user
-  //sign them in?
+
   let user = new User(request.body);
   user.save()
     .then( (user) => {
@@ -47,9 +57,11 @@ function signUp(request, response, next) {
  * @param {*} next Express next middleware function
  */
 function signIn(request, response, next) {
-  //TODO: look into keeping them signed in 
-  //if authorized, keep them signed in
-  response.status(200).send('Welcome Back');
+  User.findOne({username: request.body.username})
+    .then(user => {
+      request.token = user.generateToken();
+      response.send(request.token);
+    });
 }
 
 /**
@@ -60,10 +72,42 @@ function signIn(request, response, next) {
  */
 function leaderboard(request, response, next) {
   //TODO: Database
-  //get high scores from database
-  response.status(200).send('Top Scores:');
+
+  User.find({})
+    .limit(5)
+    .sort({wins: -1})
+    .select({_id: 0, username: 1, wins: 1})
+    .exec( (err, data) => {
+      response.status(200).send({TopScores: data});
+    });
+
 
 }
+
+function updateStats(request, response, next){
+  let [authType, token] = request.headers.authorization.split(/\s+/);
+  let id;
+  let wins;
+  User.authenticateToken(token)
+    .then( foundUser => {
+      id = foundUser._id;
+      wins = foundUser.wins;
+      wins ++;
+    })
+    .then(() => {
+      User.findByIdAndUpdate({id},
+        {wins: wins},
+        {new:true, useFindAndModify:false}
+      );
+    })
+    .then(result => {
+      response.status(200).send(result);
+    })
+    .catch(error => {
+      console.log({error});
+    });
+}
+
 
 /**
  * @function adminRoute
@@ -72,9 +116,18 @@ function leaderboard(request, response, next) {
  * @param {*} next Express next middleware function
  */
 function adminRoute(request, response, next) {
-  //TODO: authorization
-  //only admin users (handle in authorization)
-  response.status(200).send('Welcome admin');
+  if(request.user.role !== 'superuser-admin') {
+    response.status(403).send('Forbidden');
+  }
+  else {
+    response.status(200).send('Welcome admin');
+  }
 }
+
+function validate(request, response, next) {
+  response.sendStatus(204);
+}
+
+//========================================
 
 module.exports = router;

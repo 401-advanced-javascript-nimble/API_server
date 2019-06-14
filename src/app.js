@@ -11,6 +11,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const errorHandler = require('./middleware/error_handler.js');
+const notFoundHandler = require('./middleware/404.js');
 const router = require('./router/router.js');
 
 const app = express();
@@ -23,13 +24,13 @@ app.use(express.urlencoded({extended: true}));
 
 app.use(router);
 
-//TODO: Write and require in route not found?
-//TODO: Write error handler
+app.use(notFoundHandler);
 app.use(errorHandler);
 
 let running = false;
 
 module.exports = {
+  running: running, // <-- for testing
   server: app,
   start: port => {
     if(!running) {
